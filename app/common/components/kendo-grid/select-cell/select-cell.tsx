@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Checkbox } from '@servicetitan/design-system';
 import { GridCellProps, GridHeaderCellProps } from '@progress/kendo-react-grid';
-
 import * as Styles from './select-cell.less';
 
 interface SelectColumnCellProps extends GridCellProps {
@@ -34,15 +33,25 @@ export const SelectCell: React.FC<SelectCellProps> = (props: SelectCellProps) =>
     );
 };
 
-export const SelectColumnCell: React.FC<SelectColumnCellProps> = (props: SelectColumnCellProps) => (
-    <td>
-        <SelectCell
-            checked={props.dataItem.selected}
-            disabled={props.isRowUnselectable && props.isRowUnselectable(props.dataItem)}
-            selectionChange={props.selectionChange}
-        />
-    </td>
-);
+export const SelectColumnCell: React.FC<SelectColumnCellProps> = (props: SelectColumnCellProps) => {
+    if (props.rowType === 'groupHeader') {
+        return null;
+    }
+
+    if (props.rowType === 'groupFooter') {
+        return <td />;
+    }
+
+    return (
+        <td>
+            <SelectCell
+                checked={props.dataItem.selected}
+                disabled={props.isRowUnselectable && props.isRowUnselectable(props.dataItem)}
+                selectionChange={props.selectionChange}
+            />
+        </td>
+    );
+};
 
 export const SelectHeaderCell: React.FC<SelectHeaderCellProps> = (props: SelectHeaderCellProps) => (
     <SelectCell

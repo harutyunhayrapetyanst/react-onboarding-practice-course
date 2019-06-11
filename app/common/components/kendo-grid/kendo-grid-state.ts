@@ -19,12 +19,13 @@ import {
     GridHeaderSelectionChangeEvent,
     GridPageChangeEvent,
     GridSelectionChangeEvent,
-    GridSortChangeEvent,
-    GridItemChangeEvent
+    GridSortChangeEvent
 } from '@progress/kendo-react-grid';
 import { GridPDFExport } from '@progress/kendo-react-pdf';
 import { WorkbookOptions } from '@progress/kendo-ooxml';
+import { FormState, FieldState } from 'formstate';
 import { cloneDeep } from '../../utils/clone-deep';
+import { formStateToJS } from '../../utils/form-helpers';
 
 export type Selectable<T> = { readonly selected: boolean | undefined } & T;
 type Editable<T> = { inEdit: boolean | undefined } & T;
@@ -155,6 +156,10 @@ function addAggregatesToGroups(groups: GroupDescriptor[], aggregates: AggregateD
     }));
 }
 
+export type PossibleFormState<T> = FormState<{
+    [P in keyof T]-?: FieldState<T[P]>;
+}>;
+
 interface KendoGridStateContructorParams<T, TId = never> {
     dataSource?: DataSource<T> | null;
     pageSize?: number;
@@ -163,6 +168,7 @@ interface KendoGridStateContructorParams<T, TId = never> {
     /** For use with grids that enable selection only. Specifies if the item is selectable in the checkbox */
     isRowUnselectable?: (row: T) => boolean;
     singleSelection?: boolean;
+    getFormState?(row: T): PossibleFormState<T>;
 }
 
 interface FetchDataParams {
@@ -219,11 +225,13 @@ export class KendoGridState<T, TId = never> {
     }
 
     @observable selectedIds = new Set<TId>();
-    @observable inEdit = new Map<TId, T>();
+    @observable inEdit = new Map<TId, PossibleFormState<T>>();
 
     isRowUnselectable: (row: T) => boolean;
-    private idSelector: ((row: T) => TId) | undefined;
+    idSelector?(row: T): TId;
     singleSelection: boolean;
+
+    getFormState?(row: T): PossibleFormState<T>;
 
     @observable data: DataResult<Selectable<T>> = [];
     @observable totalCount = 0;
@@ -253,19 +261,18 @@ export class KendoGridState<T, TId = never> {
     }
 
     @observable skip = 0;
-    @computed get page() { return Math.floor(this.skip / this.pageSize); }
-    @computed get pageCount() { return this.pageSize > 0 ? Math.ceil(this.filteredCount / this.pageSize) : 1; }
-    pageSize: number;
+    pageSize?: number;
 
     private gridPdfExport: GridPDFExport | null = null;
     private gridExcelExport: ExcelExport | null = null;
 
     constructor({
         dataSource = null,
-        pageSize = -1,
+        pageSize,
         idSelector,
         isRowUnselectable,
-        singleSelection = false
+        singleSelection = false,
+        getFormState
     }: KendoGridStateContructorParams<T, TId> = {}) {
         this.innerDataSource = dataSource;
         this.pageSize = pageSize;
@@ -273,6 +280,8 @@ export class KendoGridState<T, TId = never> {
         this.isRowUnselectable = isRowUnselectable ? isRowUnselectable : () => false;
         this.singleSelection = singleSelection;
         this.selectedIds = new Set();
+
+        this.getFormState = getFormState;
 
         this.fetchInitialData();
     }
@@ -360,8 +369,8 @@ export class KendoGridState<T, TId = never> {
         this.selectedCount = 0;
     }
 
-    @action 
-    async edit(item: T) {
+    @action
+    async edit(row: T) {
         if (!(this.dataSource instanceof InMemoryDataSource)) {
             throw 'edit only supported for InMemoryDataSource';
         }
@@ -370,13 +379,19 @@ export class KendoGridState<T, TId = never> {
             throw 'missing idSelector';
         }
 
-        this.inEdit.set(this.idSelector(item), item);
+        if (!this.getFormState) {
+            throw 'missing getFormState';
+        }
+
+        runInAction(() => {
+            this.inEdit.set(this.idSelector!(row), this.getFormState!(row));
+        });
 
         await this.fetchData();
     }
 
     @action
-    async saveEdit(item: T, beforeSave?: (item: T) => Promise<void>) {
+    async saveEdit(row: T, beforeSave?: (changed: T) => Promise<void>) {
         if (!(this.dataSource instanceof InMemoryDataSource)) {
             throw 'saveEdit only supported for InMemoryDataSource';
         }
@@ -385,22 +400,32 @@ export class KendoGridState<T, TId = never> {
             throw 'missing idSelector';
         }
 
-        if (beforeSave) {
-            await beforeSave(item);
+        const form = this.inEdit.get(this.idSelector(row));
+
+        if (!form) {
+            return;
         }
 
-        this.dataSource.updateData(
-            v => this.idSelector!(v) === this.idSelector!(item),
-            toJS(item)
+        const changed = formStateToJS(form) as unknown as T; // FIXME: incompatible types
+
+        if (beforeSave) {
+            await beforeSave(changed);
+        }
+
+        await this.dataSource.updateData(
+            v => this.idSelector!(v) === this.idSelector!(row),
+            changed
         );
 
-        this.inEdit.delete(this.idSelector(item));
+        runInAction(() => {
+            this.inEdit.delete(this.idSelector!(row));
+        });
 
         await this.fetchData();
     }
 
     @action
-    async cancelEdit(item: T) {
+    cancelEdit(row: T) {
         if (!(this.dataSource instanceof InMemoryDataSource)) {
             throw 'cancelEdit only supported for InMemoryDataSource';
         }
@@ -409,9 +434,9 @@ export class KendoGridState<T, TId = never> {
             throw 'missing idSelector';
         }
 
-        this.inEdit.delete(this.idSelector(item));
+        this.inEdit.delete(this.idSelector(row));
 
-        await this.fetchData();
+        this.data = this.data.slice();
     }
 
     async editAll() {
@@ -419,52 +444,80 @@ export class KendoGridState<T, TId = never> {
             throw 'editAll only supported for InMemoryDataSource';
         }
 
-        const groupedData = await this.dataSource.getData({});
-        const data = this.flatten(groupedData.data);
-
-        for (const item of data) {
-            this.edit(item);
+        if (!this.idSelector) {
+            throw 'missing idSelector';
         }
+
+        if (!this.getFormState) {
+            throw 'missing getFormState';
+        }
+
+        const rows = this.flatten(
+            (await this.dataSource.getData({})).data
+        );
+
+        runInAction(() => {
+            this.inEdit = new Map(
+                rows.map<[TId, PossibleFormState<T>]>(
+                    row => [this.idSelector!(row), this.getFormState!(row)]
+                )
+            );
+
+            this.data = this.data.slice();
+        });
     }
 
-    async saveEditAll(beforeSave?: (items: T[]) => Promise<void>) {
+    async saveEditAll(beforeSave?: (changed: T[]) => Promise<void>) {
         if (!(this.dataSource instanceof InMemoryDataSource)) {
             throw 'saveEditAll only supported for InMemoryDataSource';
         }
 
-        const items = Array.from(this.inEdit.values());
+        if (!this.idSelector) {
+            throw 'missing idSelector';
+        }
+
+        const changes = this.flatten(
+            (await this.dataSource.getData({})).data
+        ).map((row) => {
+            const form = this.inEdit.get(this.idSelector!(row));
+
+            return {
+                row,
+                changed: form && formStateToJS(form) as unknown as T // FIXME: incompatible types
+            };
+        }).filter(
+            change => change.changed
+        ) as { row: T; changed: T }[];
 
         if (beforeSave) {
-            await beforeSave(items);
+            await beforeSave(
+                changes.map(change => change.changed)
+            );
         }
 
-        for (const item of items) {
-            await this.saveEdit(item);
+        for (const { row, changed } of changes) {
+            await this.dataSource.updateData(
+                v => this.idSelector!(v) === this.idSelector!(row),
+                changed
+            );
+
+            runInAction(() => {
+                this.inEdit.delete(this.idSelector!(row));
+            });
         }
+
+        await this.fetchData();
     }
 
-    async cancelEditAll() {
+    @action
+    cancelEditAll() {
         if (!(this.dataSource instanceof InMemoryDataSource)) {
             throw 'cancelEditAll only supported for InMemoryDataSource';
         }
 
-        for (const item of Array.from(this.inEdit.values())) {
-            await this.cancelEdit(item);
-        }
-    }
+        this.inEdit = new Map();
 
-    @action handleItemChange = (ev: GridItemChangeEvent) => {
-        const item = ev.dataItem as T;
-
-        if (ev.field) {
-            item[ev.field as keyof T] = ev.value;
-
-            if (this.idSelector) {
-                this.inEdit.set(this.idSelector(item), item);
-            }
-
-            this.data = this.data.slice();
-        }
+        this.data = this.data.slice();
     }
 
     @action reset() {

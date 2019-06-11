@@ -2,7 +2,6 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {
     Grid,
-    GridCell,
     GridProps,
     GridRowProps,
     GridColumn,
@@ -21,6 +20,14 @@ import { SelectColumnCell, SelectHeaderCell } from './select-cell/select-cell';
 import * as classNames from 'classnames';
 import * as Styles from './kendo-grid.less';
 
+export interface KendoGridCellProps extends GridCellProps {
+    gridState?: KendoGridState<any, any>;
+}
+
+interface KendoGridColumnProps extends GridColumnProps {
+    cell?: React.ComponentType<KendoGridCellProps>;
+}
+
 export interface KendoGridProps<T, TId = any> extends GridProps {
     selectable?: boolean;
     exportable?: boolean;
@@ -36,18 +43,12 @@ export class KendoGrid extends React.Component<KendoGridProps<any>> {
 
     private gridState = this.props.gridState;
 
-    private selectColumnCell: React.FC<GridCellProps> = (props: GridCellProps) => {
-        if (props.rowType !== 'data') {
-            return <GridCell {...props} />
-        }
-
-        return (
-            <SelectColumnCell
-                {...props}
-                isRowUnselectable={this.gridState.isRowUnselectable}
-            />
-        );
-    }
+    private selectColumnCell: React.FC<GridCellProps> = (props: GridCellProps) => (
+        <SelectColumnCell
+            {...props}
+            isRowUnselectable={this.gridState.isRowUnselectable}
+        />
+    )
 
     private selectHeaderCell: React.FC<GridHeaderCellProps> = (props: GridHeaderCellProps) => {
         if (this.props.hideSelectAll || this.gridState.singleSelection) {
@@ -89,7 +90,6 @@ export class KendoGrid extends React.Component<KendoGridProps<any>> {
             {...this.props}
             data={[...this.gridState.data]}
             rowRender={this.rowRender}
-            onItemChange={this.gridState.handleItemChange}
             editField="inEdit"
             filter={this.gridState.filter}
             onFilterChange={this.gridState.handleFilterChange}
@@ -102,8 +102,8 @@ export class KendoGrid extends React.Component<KendoGridProps<any>> {
             onHeaderSelectionChange={this.gridState.handleHeaderSelectionChange}
             onSelectionChange={this.gridState.handleSelectionChange}
             selectedField="selected"
-            pageable={this.gridState.pageSize > 0}
-            pageSize={this.gridState.pageSize > 0 ? this.gridState.pageSize : undefined}
+            pageable={!!this.gridState.pageSize}
+            pageSize={this.gridState.pageSize}
             skip={this.gridState.skip}
             onPageChange={this.gridState.handlePageChange}
             total={this.gridState.filteredCount}
@@ -126,7 +126,7 @@ export class KendoGrid extends React.Component<KendoGridProps<any>> {
                         return child;
                     }
 
-                    const column = child as React.ReactElement<GridColumnProps>;
+                    const column = child as React.ReactElement<KendoGridColumnProps>;
 
                     const { field = '' } = column.props;
                     const isFiltersActive = GridColumnMenuFilter.active(
@@ -134,7 +134,13 @@ export class KendoGrid extends React.Component<KendoGridProps<any>> {
                         this.gridState.filter
                     );
 
+                    const Cell = column.props.cell;
                     return React.cloneElement(column, {
+                        cell: Cell && (
+                            (props: KendoGridCellProps) => (
+                                <Cell {...props} gridState={this.gridState} />
+                            )
+                        ),
                         headerClassName: classNames(
                             column.props.headerClassName,
                             isFiltersActive && Styles.activeFilter
