@@ -383,9 +383,7 @@ export class KendoGridState<T, TId = never> {
             throw 'missing getFormState';
         }
 
-        runInAction(() => {
-            this.inEdit.set(this.idSelector!(row), this.getFormState!(row));
-        });
+        this.inEdit.set(this.idSelector(row), this.getFormState(row));
 
         await this.fetchData();
     }
