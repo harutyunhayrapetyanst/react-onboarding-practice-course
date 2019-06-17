@@ -3,7 +3,7 @@ import { HashRouter } from 'react-router-dom';
 
 import { Stack, Text } from '@servicetitan/design-system';
 
-import { getUserConfirmation } from './common/components/confirm-navigation/confirm-navigation';
+import { getUserConfirmation } from './modules/common/components/confirm-navigation/confirm-navigation';
 
 export const App: React.FC = () => (
     <HashRouter getUserConfirmation={getUserConfirmation}>
