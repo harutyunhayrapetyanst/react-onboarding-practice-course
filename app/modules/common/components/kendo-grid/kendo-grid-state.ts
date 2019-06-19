@@ -2,11 +2,9 @@ import { action, computed, observable, runInAction, toJS } from 'mobx';
 import axios, { CancelToken } from 'axios';
 import {
     CompositeFilterDescriptor,
-    filterBy,
     AggregateDescriptor,
     GroupDescriptor,
     GroupResult,
-    process,
     State,
     SortDescriptor,
     // toODataString
@@ -26,6 +24,7 @@ import { WorkbookOptions } from '@progress/kendo-ooxml';
 import { FormState, FieldState } from 'formstate';
 import { cloneDeep } from '../../utils/clone-deep';
 import { formStateToJS } from '../../utils/form-helpers';
+import { Preprocessors, filterBy, process } from './data-query';
 
 export type Selectable<T> = { readonly selected: boolean | undefined } & T;
 type Editable<T> = { inEdit: boolean | undefined } & T;
@@ -65,15 +64,18 @@ export interface DataSource<T> {
 
 export class InMemoryDataSource<T> implements DataSource<T> {
     private data: T[];
+    private preprocessors: Preprocessors<T>;
 
-    constructor(data: T[]) {
+    constructor(data: T[], preprocessors: Preprocessors<T> = {}) {
         this.data = cloneDeep(toJS(data));
+        this.preprocessors = preprocessors;
     }
 
     getData(state: State) {
         const processedData = process(
             cloneDeep(this.data),
-            state
+            state,
+            this.preprocessors
         );
 
         return Promise.resolve({
@@ -107,7 +109,7 @@ export class InMemoryDataSource<T> implements DataSource<T> {
 
     getFilteredPersistentItems(filter: CompositeFilterDescriptor) {
         const set = new Set(this.data);
-        const inFilter = filterBy(this.data, filter);
+        const inFilter = filterBy(this.data, filter, this.preprocessors);
         inFilter.forEach(dataItem => set.delete(dataItem));
         return cloneDeep(Array.from(set));
     }
@@ -745,7 +747,6 @@ export class KendoGridState<T, TId = never> {
     }
 
     @computed get isAllRowsSelected() {
-        /* eslint-disable-next-line no-unused-expressions */
         this.selectedCount; // observe extra variable to trigger change for selectAll
         return this.originalData.every(dataItem => this.isRowUnselectable(dataItem) || !!dataItem.selected) &&
             (this.idSelector === undefined || this.originalData.some(dataItem => this.selectedIds.has(this.idSelector!(dataItem as T))));

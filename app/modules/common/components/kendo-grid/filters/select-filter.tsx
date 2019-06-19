@@ -8,7 +8,9 @@ import {
     ComboBoxFilterChangeEvent,
     DropDownList,
     DropDownListChangeEvent,
-    DropDownListFilterChangeEvent
+    DropDownListFilterChangeEvent,
+    DropDownListProps,
+    ComboBoxProps
 } from '@progress/kendo-react-dropdowns';
 import { filterBy, FilterDescriptor } from '@progress/kendo-data-query';
 import { GridFilterCell, GridFilterCellProps } from '@progress/kendo-react-grid';
@@ -50,7 +52,7 @@ export function selectFilter<T>(
             this.filter = ev.filter;
         }
 
-        private getControl(type: ControlType) {
+        private getControl(type: ControlType): React.ComponentClass<ComboBoxProps> | React.ComponentClass<DropDownListProps> {
             switch (type) {
                 case ControlType.ComboBox: return ComboBox;
                 case ControlType.Dropdown: return DropDownList;

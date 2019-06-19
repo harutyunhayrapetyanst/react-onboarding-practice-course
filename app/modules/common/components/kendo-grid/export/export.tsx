@@ -18,7 +18,7 @@ export const Export: React.FC<ExportProps> = ({ className, totalCount, exportPdf
             <Dropdown
                 trigger={
                     <Button
-                        qa-testing="export-dropdown"
+                        className="qa-export-dropdown"
                         iconName="expand_more"
                         iconPosition="right"
                     >
@@ -29,8 +29,8 @@ export const Export: React.FC<ExportProps> = ({ className, totalCount, exportPdf
                 icon={null}
             >
                 <Dropdown.Menu className={Styles.dropdown}>
-                    {exportPdf && <Dropdown.Item qa-testing="export-pdf" text=".PDF" onClick={exportPdf} />}
-                    {exportExcel && <Dropdown.Item qa-testing="export-excel" text=".XLSX" onClick={exportExcel} />}
+                    {exportPdf && <Dropdown.Item className="qa-export-pdf" text=".PDF" onClick={exportPdf} />}
+                    {exportExcel && <Dropdown.Item className="qa-export-excel" text=".XLSX" onClick={exportExcel} />}
                 </Dropdown.Menu>
             </Dropdown>
         </div>
