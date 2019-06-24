@@ -1,9 +1,10 @@
 import { AxiosPromise } from "axios";
-import { User } from "../models/User";
+import { User } from "../../common/models/User";
 
+export type LoginParams = Pick<User, 'login'>;
 
 export interface IAuthApi {
-    login(params: User): AxiosPromise<User>,
+    login(params: LoginParams): AxiosPromise<User>,
 
     register(user: User): AxiosPromise<User>,
 
