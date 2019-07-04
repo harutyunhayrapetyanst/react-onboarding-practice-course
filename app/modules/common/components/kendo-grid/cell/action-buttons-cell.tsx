@@ -6,20 +6,20 @@ export class ActionButtonsCell extends GridCell {
 
     onEditClick = () => {
         console.log('edit');
-    };
+    }
 
     onSaveClick = () => {
         console.log('save');
-    };
+    }
 
 
     onDeleteClick = () => {
         console.log('delete');
-    };
+    }
 
     onCancelClick = () => {
         console.log('cancel');
-    };
+    }
 
     render() {
         const { dataItem: { inEdit } } = this.props;
