@@ -1,42 +1,55 @@
+/*
+ * source https://www.telerik.com/kendo-react-ui/components/grid/editing/editing-inline/
+ */
+
 import * as React from 'react';
-import { GridCell } from '@progress/kendo-react-grid';
+import { GridCell, GridCellProps } from '@progress/kendo-react-grid';
 import { Button } from '@servicetitan/design-system';
 
-export class ActionButtonsCell extends GridCell {
+export interface IActionButtonsCellParams<T> {
+    onEdit: (dataItem: T) => void;
+    onDelete: (dataItem: T) => void;
+    onCancel: (dataItem: T) => void;
+    onSave: (dataItem: T) => void;
+}
 
-    onEditClick = () => {
-        console.log('edit');
-    }
+export function getActionButtonsCell<T>(params: IActionButtonsCellParams<T>): React.ComponentType<GridCellProps> {
+    return class ActionButtonsCell extends GridCell {
 
-    onSaveClick = () => {
-        console.log('save');
-    }
+        onEditClick = (dataItem: T) => {
+            params.onEdit(dataItem);
+        };
+
+        onSaveClick = (dataItem: T) => {
+            params.onSave(dataItem);
+        };
 
 
-    onDeleteClick = () => {
-        console.log('delete');
-    }
+        onDeleteClick = (dataItem: T) => {
+            params.onDelete(dataItem);
+        };
 
-    onCancelClick = () => {
-        console.log('cancel');
-    }
+        onCancelClick = (dataItem: T) => {
+            params.onCancel(dataItem);
+        };
 
-    render() {
-        const { dataItem: { inEdit } } = this.props;
-        if (inEdit) {
-            return (
-                <td>
-                    <Button text onClick={this.onCancelClick}>Cancel</Button>
-                    <Button text primary onClick={this.onSaveClick}>Save</Button>
-                </td>
-            );
-        } else {
-            return (
-                <td>
-                    <Button text primary onClick={this.onEditClick}>Edit</Button>
-                    <Button text negative onClick={this.onDeleteClick}>Delete</Button>
-                </td>
-            );
+        render() {
+            const { dataItem } = this.props;
+            if (dataItem.inEdit) {
+                return (
+                    <td>
+                        <Button text onClick={() => this.onCancelClick(dataItem)}>Cancel</Button>
+                        <Button text primary onClick={() => this.onSaveClick(dataItem)}>Save</Button>
+                    </td>
+                );
+            } else {
+                return (
+                    <td>
+                        <Button text primary onClick={() => this.onEditClick(dataItem)}>Edit</Button>
+                        <Button text negative onClick={() => this.onDeleteClick(dataItem)}>Delete</Button>
+                    </td>
+                );
+            }
         }
-    }
+    };
 }
