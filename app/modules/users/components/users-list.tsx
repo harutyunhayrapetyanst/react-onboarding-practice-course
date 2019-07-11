@@ -19,10 +19,10 @@ export const UsersList: React.FC = () => {
     const store  = new UserListStore();
     const ActionButtonsCell = getActionButtonsCell<User>(
         {
-            onCancel: store.cancelEdit,
-            onDelete: store.delete,
-            onEdit  : store.edit,
-            onSave  : store.saveEdit
+            onCancel: console.log,
+            onDelete: console.log,
+            onEdit  : console.log,
+            onSave  : console.log,
         });
 
     return (
