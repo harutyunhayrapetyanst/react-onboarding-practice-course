@@ -11,10 +11,10 @@ import { RegisterStore } from '../stores/register.store';
 const roleOptions = enumToOptions(Role);
 
 @provide({
-             singletons: [
-                 RegisterStore
-             ]
-         })
+    singletons: [
+        RegisterStore
+    ]
+})
 @observer
 export class RegisterPage extends React.Component {
 

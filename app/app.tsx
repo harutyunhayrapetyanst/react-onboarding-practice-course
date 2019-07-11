@@ -27,8 +27,11 @@ export const App: React.FC = provide({ singletons: [AppStore] })(observer(() => 
 
 
 const AuthenticatedPage = observer(() => {
-
     const [appStore] = useDependencies(AppStore);
+
+    function onLogoutClick() {
+        appStore.removeLoggedInUser();
+    }
 
     return (
         <Stack alignItems="flex-start" justifyContent="center" className="flex-auto">
@@ -37,7 +40,7 @@ const AuthenticatedPage = observer(() => {
                     <SideNavLinkItem pathname="/users">Users</SideNavLinkItem>
                     <SideNavLinkItem pathname="/feed">Feed</SideNavLinkItem>
                     <br />
-                    <Confirm onClick={() => appStore.removeLoggedInUser()} confirmation={LogoutConfirmation}>
+                    <Confirm onClick={onLogoutClick} confirmation={LogoutConfirmation}>
                         {onClick => (
                             <SideNav.Item onClick={onClick}>Logout</SideNav.Item>
                         )}

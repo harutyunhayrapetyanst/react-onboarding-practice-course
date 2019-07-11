@@ -11,10 +11,10 @@ import { observer } from 'mobx-react';
 
 
 @provide({
-             singletons: [
-                 LoginStore,
-             ],
-         })
+    singletons: [
+        LoginStore,
+    ],
+})
 @observer
 export class LoginPage extends React.Component {
 

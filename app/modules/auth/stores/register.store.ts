@@ -48,7 +48,7 @@ export class RegisterStore {
             return 'Login is already taken';
         }
         return null;
-    };
+    }
 
 
     private login = new InputFieldState('rembo')
@@ -66,9 +66,9 @@ export class RegisterStore {
 
 
     passwordsFormState = new FormState({
-                                           password: this.password,
-                                           passwordConfirm: this.passwordConfirm,
-                                       })
+        password: this.password,
+        passwordConfirm: this.passwordConfirm,
+    })
         .validators(passwordsMatchValidator);
 
 
@@ -76,11 +76,10 @@ export class RegisterStore {
     errorMessage?: string;
 
     formState = new FormState({
-                                  login: this.login,
-                                  role: this.role,
-                                  passwords: this.passwordsFormState
-                              }
-    );
+        login: this.login,
+        role: this.role,
+        passwords: this.passwordsFormState
+    });
 
 
     @action
@@ -101,5 +100,5 @@ export class RegisterStore {
             console.log('success');
             this.appStore.setLoggedInUser(result.data!);
         }
-    };
+    }
 }

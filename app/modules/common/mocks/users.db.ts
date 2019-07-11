@@ -1,5 +1,5 @@
-import { User } from '../common/models/user';
-import { Role } from '../common/enums/Role';
+import { User } from '../models/user';
+import { Role } from '../enums/Role';
 import { injectable } from '@servicetitan/react-ioc';
 
 export const users: User[] = [
@@ -69,15 +69,12 @@ export class UsersDB {
     }
 
     create(user: User): User | undefined {
-        const _user = this.findByLogin(user.login);
-        if (_user) {
+        const userEsists = this.findByLogin(user.login);
+        if (userEsists) {
             return undefined;
         }
-
         user.id = users.length + 1;
-
         users.push(user);
-
         return user;
     }
 

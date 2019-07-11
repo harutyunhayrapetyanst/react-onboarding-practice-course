@@ -1,6 +1,6 @@
 import { InMemoryDataSource, KendoGridState } from '../../common/components/kendo-grid/kendo-grid-state';
 import { User } from '../../common/models/user';
-import { users } from '../../mocks/users.db';
+import { users } from '../../common/mocks/users.db';
 import { setFormStateValues } from '../../common/utils/form-helpers';
 import { FieldState, FormState } from 'formstate';
 import { Role } from '../../common/enums/Role';
@@ -27,14 +27,14 @@ export class UserListStore {
         return user.id;
     }
 
-    public getFormState(user: User) {
+    getFormState(user: User) {
         return setFormStateValues(
             new FormState({
-                              id: new FieldState(user.id),
-                              login: new FieldState(user.login),
-                              password: new FieldState(user.password),
-                              role: new FieldState<Role>(user.role),
-                          }),
+                id: new FieldState(user.id),
+                login: new FieldState(user.login),
+                password: new FieldState(user.password),
+                role: new FieldState<Role>(user.role),
+            }),
             user);
     }
 }

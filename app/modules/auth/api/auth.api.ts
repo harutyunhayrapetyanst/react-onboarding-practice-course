@@ -1,8 +1,8 @@
 import { AxiosPromise, AxiosResponse } from 'axios';
 import { User } from '../../common/models/user';
-import { UsersDB } from '../../mocks/users.db';
+import { UsersDB } from '../../common/mocks/users.db';
 import { inject, injectable } from '@servicetitan/react-ioc';
-import { mockResponse } from '../../mocks/utils';
+import { mockResponse } from '../../common/mocks/utils';
 
 export type LoginParams = Pick<User, 'login' | 'password'>;
 

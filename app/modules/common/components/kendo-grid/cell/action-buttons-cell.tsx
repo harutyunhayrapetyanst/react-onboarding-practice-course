@@ -16,37 +16,36 @@ export interface IActionButtonsCellParams<T> {
 export function getActionButtonsCell<T>(params: IActionButtonsCellParams<T>): React.ComponentType<GridCellProps> {
     return class ActionButtonsCell extends GridCell {
 
-        onEditClick = (dataItem: T) => {
+        onEditClick = (dataItem: T) => () => {
             params.onEdit(dataItem);
-        };
+        }
 
-        onSaveClick = (dataItem: T) => {
+        onSaveClick = (dataItem: T) => () => {
             params.onSave(dataItem);
-        };
+        }
 
-
-        onDeleteClick = (dataItem: T) => {
+        onDeleteClick = (dataItem: T) => () => {
             params.onDelete(dataItem);
-        };
+        }
 
-        onCancelClick = (dataItem: T) => {
+        onCancelClick = (dataItem: T) => () => {
             params.onCancel(dataItem);
-        };
+        }
 
         render() {
             const { dataItem } = this.props;
             if (dataItem.inEdit) {
                 return (
                     <td>
-                        <Button text onClick={() => this.onCancelClick(dataItem)}>Cancel</Button>
-                        <Button text primary onClick={() => this.onSaveClick(dataItem)}>Save</Button>
+                        <Button text onClick={this.onCancelClick(dataItem)}>Cancel</Button>
+                        <Button text primary onClick={this.onSaveClick(dataItem)}>Save</Button>
                     </td>
                 );
             } else {
                 return (
                     <td>
-                        <Button text primary onClick={() => this.onEditClick(dataItem)}>Edit</Button>
-                        <Button text negative onClick={() => this.onDeleteClick(dataItem)}>Delete</Button>
+                        <Button text primary onClick={this.onEditClick(dataItem)}>Edit</Button>
+                        <Button text negative onClick={this.onDeleteClick(dataItem)}>Delete</Button>
                     </td>
                 );
             }

@@ -11,7 +11,7 @@ import { AppStore } from '../../common/stores/app.store';
 @injectable()
 export class LoginStore {
 
-    constructor(@inject(AuthApi) private authApi: AuthApi, @inject(AppStore) private appStore: AppStore,) {
+    constructor(@inject(AuthApi) private authApi: AuthApi, @inject(AppStore) private appStore: AppStore) {
         console.log('LoginStore: constructor');
     }
 
@@ -22,9 +22,9 @@ export class LoginStore {
     loggedInUser?: User;
 
     formState = new FormState({
-                                  login: new InputFieldState<string>('rembo').validators(FormValidators.required),
-                                  password: new InputFieldState<string>('Aaaaaa!1').validators(FormValidators.required)
-                              });
+        login: new InputFieldState<string>('rembo').validators(FormValidators.required),
+        password: new InputFieldState<string>('Aaaaaa!1').validators(FormValidators.required)
+    });
 
 
     @action
@@ -46,6 +46,5 @@ export class LoginStore {
                 this.errorMessage = response.statusText;
             });
         }
-    };
-
+    }
 }
