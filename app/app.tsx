@@ -5,29 +5,30 @@ import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 import { Dialog, Page, SideNav, Stack, Text } from '@servicetitan/design-system';
 
 import { SideNavLinkItem } from './modules/common/components/sidenav-link-item';
+import { provide, useDependencies } from '@servicetitan/react-ioc';
+import { AppStore } from './modules/common/stores/app.store';
 import { getUserConfirmation } from './modules/common/components/confirm-navigation/confirm-navigation';
 import { AuthPage } from './modules/auth/components/auth-page';
+import { observer } from 'mobx-react-lite';
 import { Confirm, ConfirmationProps } from './modules/common/components/confirm/confirm';
 import { UsersPage } from './modules/users/components/user-page';
 
 
 configure({ enforceActions: 'observed' });
 
-export const App: React.FC = () => {
-    const isAuthenticated = true;
+export const App: React.FC = provide({ singletons: [AppStore] })(observer(() => {
+    const [{ isAuthenticated }] = useDependencies(AppStore);
     return (
         <HashRouter getUserConfirmation={getUserConfirmation} hashType="slash">
             {isAuthenticated ? <AuthenticatedPage /> : <AuthPage />}
         </HashRouter>
     );
-};
+}));
 
 
-const AuthenticatedPage = () => {
+const AuthenticatedPage = observer(() => {
 
-    function handleLogoutLinkClick() {
-        console.log('logout');
-    }
+    const [appStore] = useDependencies(AppStore);
 
     return (
         <Stack alignItems="flex-start" justifyContent="center" className="flex-auto">
@@ -36,7 +37,7 @@ const AuthenticatedPage = () => {
                     <SideNavLinkItem pathname="/users">Users</SideNavLinkItem>
                     <SideNavLinkItem pathname="/feed">Feed</SideNavLinkItem>
                     <br />
-                    <Confirm onClick={handleLogoutLinkClick} confirmation={LogoutConfirmation}>
+                    <Confirm onClick={() => appStore.removeLoggedInUser()} confirmation={LogoutConfirmation}>
                         {onClick => (
                             <SideNav.Item onClick={onClick}>Logout</SideNav.Item>
                         )}
@@ -47,7 +48,7 @@ const AuthenticatedPage = () => {
                 <Page>
                     <Switch>
                         <Route path="/users" component={UsersPage} />
-                        <Route path="/feed" component={HomePage} />
+                        <Route path="/feed" component={UsersPage} />
                         <Route exact path="/" component={HomePage} />
                         <Redirect to="/" />
                     </Switch>
@@ -55,7 +56,7 @@ const AuthenticatedPage = () => {
             </Stack.Item>
         </Stack>
     );
-};
+});
 
 const LogoutConfirmation: React.FC<ConfirmationProps> = ({ onConfirm, onCancel }) => (
     <Dialog
