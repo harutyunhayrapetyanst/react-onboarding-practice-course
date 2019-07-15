@@ -39,7 +39,9 @@ export class LoginStore {
 
         const response = await this.authApi.login(form);
         if (response.status === 200) {
-            this.loggedInUser = response.data;
+            runInAction(() => {
+                this.loggedInUser = response.data;
+            });
             this.appStore.setLoggedInUser(response.data!);
         } else {
             runInAction(() => {

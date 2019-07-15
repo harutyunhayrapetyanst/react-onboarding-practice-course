@@ -19,10 +19,10 @@ const passwordsMatchValidator: SamePasswordValidator = ($) => {
     const error = 'Passwords must match';
     if ($.password.$ !== $.passwordConfirm.$) {
         $.password.setError(error);
-        $.passwordConfirm.setError(error);
+        $.passwordConfirm.setError(' ');
         return error;
     }
-    return null;
+    return null; 
 };
 
 const strongPasswordValidator: Validator<string> = (value) => {

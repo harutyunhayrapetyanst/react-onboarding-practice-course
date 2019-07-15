@@ -73,7 +73,7 @@ export class UsersDB {
         if (userEsists) {
             return undefined;
         }
-        user.id = users.length + 1;
+        user.id = this.nextId;
         users.push(user);
         return user;
     }
@@ -93,5 +93,10 @@ export class UsersDB {
         }
         users.splice(index, 1);
         return true;
+    }
+
+    private get nextId() {
+        const maxId = users.reduce((currentMax, item) => (item.id! > currentMax) ? item.id! : currentMax, 1);
+        return maxId + 1;
     }
 }
