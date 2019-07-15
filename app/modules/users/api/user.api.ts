@@ -1,5 +1,5 @@
 import { AxiosPromise } from 'axios';
-import { User } from '../../common/models/User';
+import { User } from '../../common/models/user';
 
 
 export interface IUserApi {
