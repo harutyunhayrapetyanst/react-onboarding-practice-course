@@ -1,6 +1,7 @@
 import { User } from '../models/user';
 import { Role } from '../enums/Role';
 import { injectable } from '@servicetitan/react-ioc';
+import { cloneDeep } from '../utils/clone-deep';
 
 export const users: User[] = [
     {
@@ -47,25 +48,31 @@ export const users: User[] = [
     }
 ];
 
+
 @injectable()
 export class UsersDB {
 
-    constructor() {
-        console.log('UsersDB:constructor');
+    findAll(): User[] {
+        return cloneDeep(users);
     }
 
     findByLogin(login: string): User | undefined {
         if (!login) {
             return void 0;
         }
-        return users.find(item => item.login === login);
+        const user = users.find(item => item.login === login);
+        if (user) {
+            return cloneDeep(user);
+        }
+        return;
     }
 
     findById(id: number): User | undefined {
         if (!id) {
             return void 0;
         }
-        return users.find(item => item.id === id);
+        const user = users.find(item => item.id === id);
+        return cloneDeep(user);
     }
 
     create(user: User): User | undefined {
@@ -73,9 +80,10 @@ export class UsersDB {
         if (userEsists) {
             return undefined;
         }
-        user.id = this.nextId;
-        users.push(user);
-        return user;
+        const userToSave = cloneDeep(user);
+        userToSave.id = this.nextId;
+        users.push(userToSave);
+        return userToSave;
     }
 
     update(id: number, data: User): User | undefined {
