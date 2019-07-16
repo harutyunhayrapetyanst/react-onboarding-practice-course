@@ -53,7 +53,7 @@ const AuthenticatedPage = observer(() => {
                 <Page>
                     <Switch>
                         <Route path="/users" component={UsersPage} />
-                        <Route path="/feed" component={UsersPage} />
+                        <Route path="/feed" component={HomePage} />
                         <Route exact path="/" component={HomePage} />
                         <Redirect to="/" />
                     </Switch>

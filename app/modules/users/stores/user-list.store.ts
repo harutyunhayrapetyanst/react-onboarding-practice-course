@@ -5,7 +5,7 @@ import { InMemoryDataSource, KendoGridState } from '../../common/components/kend
 import { Role } from '../../common/enums/Role';
 import { users } from '../../common/mocks/users.db';
 import { User } from '../../common/models/user';
-import { setFormStateValues } from '../../common/utils/form-helpers';
+import { formStateToJS, setFormStateValues } from '../../common/utils/form-helpers';
 import { IUserApi, UserApi } from '../api/user.api';
 
 
@@ -65,11 +65,12 @@ export class UserListStore {
     @action
     onSave = async (dataItem: User) => {
         const user = { ...dataItem };
-        const response = await this.userApi.updateUser(user.id!, user);
+        const formState = this.gridState.inEdit.get(user.id!);
+        const updatedUser:User = formStateToJS(formState!);
+
+        const response = await this.userApi.updateUser(user.id!, Object.assign(user, updatedUser));
         if (response.status === 200) {
-            runInAction(() => {
-                this.gridState.saveEdit(dataItem);
-            });
+            await this.gridState.saveEdit(dataItem);
         } else {
             runInAction(() => {
                 this.serverError = response.statusText;

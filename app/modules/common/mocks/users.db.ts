@@ -1,6 +1,6 @@
-import { User } from '../models/user';
-import { Role } from '../enums/Role';
 import { injectable } from '@servicetitan/react-ioc';
+import { Role } from '../enums/Role';
+import { User } from '../models/user';
 import { cloneDeep } from '../utils/clone-deep';
 
 export const users: User[] = [
@@ -75,6 +75,10 @@ export class UsersDB {
         return cloneDeep(user);
     }
 
+    findIndexById(id: number): number {
+        return users.findIndex(item => item.id === id);
+    }
+
     create(user: User): User | undefined {
         const userEsists = this.findByLogin(user.login);
         if (userEsists) {
@@ -91,7 +95,10 @@ export class UsersDB {
         if (!user) {
             return void 0;
         }
-        return Object.assign(user, data);
+        const updatedUser = Object.assign(user, data);
+        const index = this.findIndexById(user.id!);
+        users.splice(index, 1, updatedUser);
+        return updatedUser;
     }
 
     delete(id: number): boolean {
